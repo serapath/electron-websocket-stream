@@ -1,0 +1,35 @@
+{
+  "name": "electron-websocket-stream",
+  "version": "1.0.0",
+  "description": "spawn browser windows connected to the main process via websocket-stream",
+  "main": "source/electron-websocket-stream.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/serapath/electron-websocket-stream.git"
+  },
+  "keywords": [
+    "electron",
+    "browserify",
+    "websocket-stream",
+    "websocket",
+    "stream",
+    "websockets"
+  ],
+  "author": "@serapath",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/serapath/electron-websocket-stream/issues"
+  },
+  "homepage": "https://github.com/serapath/electron-websocket-stream#readme",
+  "dependencies": {
+    "browserify": "^13.3.0",
+    "concat-stream": "^1.6.0",
+    "duplexify": "^3.5.0",
+    "parse-function": "^3.0.0",
+    "readable-stream": "^2.2.2",
+    "websocket-stream": "^3.3.3"
+  }
+}
