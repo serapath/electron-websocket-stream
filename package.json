@@ -1,6 +1,6 @@
 {
   "name": "electron-websocket-stream",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "spawn browser windows connected to the main process via websocket-stream",
   "main": "source/electron-websocket-stream.js",
   "scripts": {
@@ -28,6 +28,7 @@
     "browserify": "^13.3.0",
     "concat-stream": "^1.6.0",
     "duplexify": "^3.5.0",
+    "minixhr": "^3.1.0",
     "parse-function": "^3.0.0",
     "readable-stream": "^2.2.2",
     "websocket-stream": "^3.3.3"
