@@ -210,7 +210,7 @@ function BW (opts, options) {
     pathname  : `${SECRET}-${ID}-${debug}`
   })
   opts.nodeIntegration = false
-  opts.show = false
+  opts.show = opts.show || false
   var bw = new BrowserWindow(opts)
   var o = { objectMode: true }
   var encode$ = transform(o)
