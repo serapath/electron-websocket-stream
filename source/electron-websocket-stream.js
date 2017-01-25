@@ -1,4 +1,5 @@
-var read = require('readable-stream')
+var read = require('readable-stream/readable')
+var transform = require('readable-stream/transform')
 var concat = require('concat-stream')
 var duplexify = require('duplexify')
 var websocket = require('websocket-stream')
@@ -11,8 +12,6 @@ var url = require('url')
 var path = require('path')
 
 var electron = require('electron')
-
-var transform = read.Transform
 
 var app = electron.app
 var BrowserWindow = electron.BrowserWindow
@@ -32,8 +31,7 @@ function trustHandler (event, webContents, url, error, certificate, trust) {
   event.preventDefault()
   var decision
   if (url === url) { // Verification logic.
-    // do your validation here
-    decision = true
+    decision = true // do your validation here
   }
   trust(decision)
 }
@@ -210,28 +208,16 @@ function BW (opts, options) {
     pathname  : `${SECRET}-${ID}-${debug}`
   })
   opts.nodeIntegration = false
-  opts.show = opts.show || false
+  var show = opts.show
+  opts.show = false
   var bw = new BrowserWindow(opts)
+  if (show) bw.once('ready-to-show', function () { bw.show() })
+  var convert = require('_convert')
+  var encode$ = convert.stringify()
+  var decode$ = convert.parse()
   var o = { objectMode: true }
-  var encode$ = transform(o)
-  encode$._transform = function data2json (chunk, encoding, next) {
-    if (chunk !== null && typeof chunk === 'object') {
-      try { data = JSON.stringify(data) }
-      catch (e) { next(e) }
-    }
-    next(null, chunk)
-  }
-  var decode$ = transform(o)
-  decode$._transform = function json2data (chunk, encoding, next) {
-    chunk = chunk.toString()
-    if (chunk === 'undefined') chunk = undefined
-    try { chunk = JSON.parse(chunk) }
-    catch (e) { chunk = chunk }
-    next(null, chunk)
-  }
   var ws$ = duplexify(encode$, decode$, o)
   WINDOWS[ID] = { bw: bw, ws: { encode: encode$, decode: decode$, ws$: ws$ } }
-  bw.once('ready-to-show', function () { bw.show() })
   bw.webContents.connectFunctionScript = connectFunctionScript
   var connected
   function connectFunctionScript (javascriptFn) {
@@ -254,22 +240,9 @@ function BW (opts, options) {
       var duplexify = require('duplexify')
       var opts = { objectMode: true }
       var connection$ = require('websocket-stream')("wss://${href}", opts)
-      var encode$ = transform(opts)
-      encode$._transform = function data2json (chunk, encoding, next) {
-        if (chunk !== null && typeof chunk === 'object') {
-          try { chunk = JSON.stringify(chunk) }
-          catch (e) { next(e) }
-        }
-        next(null, chunk)
-      }
-      var decode$ = transform(opts)
-      decode$._transform = function json2data (chunk, encoding, next) {
-        chunk = chunk.toString()
-        if (chunk === 'undefined') chunk = undefined
-        try { chunk = JSON.parse(chunk) }
-        catch (e) { chunk = chunk }
-        next(null, chunk)
-      }
+      var convert = require('./source/node_modules/_convert')
+      var encode$ = convert.stringify()
+      var decode$ = convert.parse()
       var ws$ = duplexify(encode$, decode$, opts)
       encode$.pipe(connection$)
       connection$.pipe(decode$) // pipe and/or buffer in through stream

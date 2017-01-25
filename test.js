@@ -1,10 +1,4 @@
-# electron-websocket-stream
-spawn browser windows connected to the main process via websocket-stream
-
-# usage
-`npm install electron-websocket-stream`
-```js
-var electrows = require('electron-websocket-stream')
+var electrows = require('./')
 
 electrows(electronFn, { debug: false, show: false })
 
@@ -74,4 +68,3 @@ function scriptFn (ws) { //
   ws.end() // closes the websocket stream & exits the BrowserifyWindow `win`
 
 }
-```
