@@ -6,8 +6,14 @@ spawn browser windows connected to the main process via websocket-stream
 ```js
 var electrows = require('electron-websocket-stream')
 
-electrows(electronFn, { debug: false, show: false })
+// duplex$ can send/receive data from a duplex stream
+// if `electronFn` returns one.
+var duplex$ = electrows(electronFn, { debug: false, show: false })
 
+duplex$.write('send data to main process')
+duplex$.on('data', function (data) {
+  console.log('receive data from main process:', data)
+})
 /********************************************************************
   MAIN PROCESS
  list all electron API objects you want as parameter of `electronFn`
@@ -31,22 +37,27 @@ electrows(electronFn, { debug: false, show: false })
      that allows communication between the main and render process
 ********************************************************************/
 function electronFn (BrowserifyWindow) {
-  var opts = { width: 800, height: 600 }
+  var opts = { width: 800, height: 600, show: true }
   var win = BrowserifyWindow(opts)
   win.loadURL('http://www.google.de')
+  // win.openDevTools()
   var ws = win.webContents.connectFunctionScript(scriptFn)
 
   // listen to the 'data' event
   ws.on('data', function (data) {
+    console.log('receive data in main process:')
     console.log(typeof data)
     console.log (data)
   })
-  ws.on('end', function () {console.log('end')})
+  ws.on('end', function () { console.log('end') })
+  ws.write('DATA2')
   // ws.on('finish', function () {console.log('finish')})
   // ws.on('close', function () {console.log('close')})
   // ws.on('exit', function () {console.log('exit')})
   // or pipe to another stream
   // ws.pipe(...)
+
+  return ws // [optional] return a duplex stream
 }
 /********************************************************************
   MAIN PROCESS
@@ -56,7 +67,7 @@ function electronFn (BrowserifyWindow) {
        for communication with the main process
 ********************************************************************/
 function scriptFn (ws) { //
-
+  window.ws =ws
   var bel = require('bel')
 
   var element = bel`<h1> hello world </h1>`
@@ -69,9 +80,13 @@ function scriptFn (ws) { //
     content  : document.querySelector('h1').innerText
   }
 
+  ws.on('data', function (data) {
+    console.log('receive data in browserify window:')
+    console.log(data)
+  })
   ws.write(data) // sende data to the main process
 
-  ws.end() // closes the websocket stream & exits the BrowserifyWindow `win`
+  // ws.end() // closes the websocket stream & exits the BrowserifyWindow `win`
 
 }
 ```

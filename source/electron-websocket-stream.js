@@ -1,10 +1,12 @@
 var read = require('readable-stream/readable')
 var transform = require('readable-stream/transform')
+var passthrough = require('readable-stream/passthrough')
 var concat = require('concat-stream')
 var duplexify = require('duplexify')
 var websocket = require('websocket-stream')
 var browserify = require('browserify')
 var parsefn = require('parse-function')
+var isStream = require('is-stream')
 
 var https = require('https')
 var fs = require('fs')
@@ -149,9 +151,19 @@ process.on('exit', function () {
 module.exports = crawler
 
 function crawler (electronFn, options) {
+  var dup$ = duplexify(null,null,{ objectMode: true })
   if (app.isReady() && server.listening) crawl()
   register.on('ready', crawl)
-  function crawl () { start(electronFn, options) }
+  function crawl () {
+    var stream$ = start(electronFn, options)
+    if (isStream.duplex(stream$)) {
+      var ptr = passthrough({ objectMode: true })
+      stream$.pipe(ptr)
+      dup$.setReadable(ptr)
+      dup$.setWritable(ptr)
+    }
+  }
+  return dup$
 }
 function websocketHandler (connection$) {
   var ID = connection$.socket.upgradeReq.url.split('-')[1]
@@ -191,7 +203,7 @@ function start (electronFn, options) {
     var index = electronProps.indexOf(param)
     if (index !== -1) args.push(electron[param])
   })
-  electronFn.apply(null, args)
+  return electronFn.apply(null, args)
 }
 function handleError (err) {
   console.error(err) // print the error to STDERR
