@@ -159,8 +159,8 @@ function crawler (electronFn, options) {
     if (isStream.duplex(stream$)) {
       var ptr = passthrough({ objectMode: true })
       stream$.pipe(ptr)
+      dup$.setWritable(stream$)
       dup$.setReadable(ptr)
-      dup$.setWritable(ptr)
     }
   }
   return dup$
@@ -252,7 +252,7 @@ function BW (opts, options) {
       var duplexify = require('duplexify')
       var opts = { objectMode: true }
       var connection$ = require('websocket-stream')("wss://${href}", opts)
-      var convert = require('./source/node_modules/_convert')
+      var convert = require('${path.join(__dirname,'node_modules/_convert')}')
       var encode$ = convert.stringify()
       var decode$ = convert.parse()
       var ws$ = duplexify(encode$, decode$, opts)

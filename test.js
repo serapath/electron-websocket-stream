@@ -6,7 +6,7 @@ var duplex$ = electrows(electronFn, { debug: false, show: false })
 
 duplex$.write('send data to main process')
 duplex$.on('data', function (data) {
-  console.log('receive data from main process:', data)
+  console.log('receive data from main process `electronFn`:', data)
 })
 /********************************************************************
   MAIN PROCESS
