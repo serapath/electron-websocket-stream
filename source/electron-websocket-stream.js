@@ -268,7 +268,6 @@ function BW (opts, options) {
       var onerror = window.onerror
       window.onerror = function (msg, url, lineNo, columnNo, e) {
         if ('${debug}' === 'debug') {
-          debugger
           var ERR = {type:"error",name:e.name,msg:msg,stack:e.stack}
           minixhr({ url: "https://${href}", data: JSON.stringify(ERR) })
           return true
