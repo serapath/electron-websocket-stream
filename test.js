@@ -2,7 +2,9 @@ var electrows = require('./')
 
 // duplex$ can send/receive data from a duplex stream
 // if `electronFn` returns one.
-var duplex$ = electrows(electronFn, { debug: false, show: false })
+var duplex$ = electrows(electronFn, { debug: false })
+// `debug` logs some connection details and controls whether errors
+// in the browser are sent to the http server for logging
 
 duplex$.write('send data to main process')
 duplex$.on('data', function (data) {
