@@ -6,39 +6,35 @@ spawn browser windows connected to the main process via websocket-stream
 ```js
 var electrows = require('electron-websocket-stream')
 
-// duplex$ can send/receive data from a duplex stream
-// if `electronFn` returns one.
-var duplex$ = electrows(electronFn, { debug: false })
+var options = { debug: false }
 // `debug` logs some connection details and controls whether errors
 // in the browser are sent to the http server for logging
 
-duplex$.write('send data to main process')
-duplex$.on('data', function (data) {
-  console.log('receive data from main process `electronFn`:', data)
-})
+electrows(options, callback)
+
 /********************************************************************
   MAIN PROCESS
- list all electron API objects you want as parameter of `electronFn`
 
- e.g. function electron (app, BrowserWindow) { }
- e.g. function electronFn (BrowserifyWindow) { ... }
-
- `BrowserifyWindow` is additionally supported and
+ `electron.BrowserifyWindow` is additionally supported and
  returns a "BrowserWindow instance" that supports the
- additional method: `.connectFunctionScript` with one
+ additional method: `.webContents.connectFunctionScript` with one
  parameter `scriptFn`.
 
- Calling `.connectFunctionScript(myScriptFn)` requires
+ Calling `.webContents.connectFunctionScript(myScriptFn)` requires
  `myScriptFn` to have it's first parameter named `ws` and
  returns a `websocket-stream` instance.
-   * The returned `ws` instance lives in the main process.
-   * The argument passed to the `ws` parameter of `myScriptFn`
-     is the `websocket-stream` instance that lives in the
-     render process.
-   * This constitutes a real time stream connection
-     that allows communication between the main and render process
+   1. The returned `ws` instance lives in the MAIN PROCESS.
+   2. The argument passed to the `ws` parameter of `myScriptFn`
+      is the `websocket-stream` instance that lives in the
+      RENDER PROCESS.
+   3. This constitutes a real time stream connection
+      that allows communication between the main and render process
 ********************************************************************/
-function electronFn (BrowserifyWindow) {
+function callback (error, electron) {
+  if (error) throw error
+
+  var BrowserifyWindow = electron.BrowserifyWindow
+
   var opts = { width: 800, height: 600, show: true }
   var win = BrowserifyWindow(opts)
   win.loadURL('http://www.google.de')
@@ -62,14 +58,15 @@ function electronFn (BrowserifyWindow) {
   return ws // [optional] return a duplex stream
 }
 /********************************************************************
-  MAIN PROCESS
+  RENDER PROCESS
 
   * `scriptFn` will be stringified and browserified to run in a BrowserWindow
   * `ws` parameter will be passed a websocket-stream instance arguments
        for communication with the main process
+  * ending `ws` exits the browser window
 ********************************************************************/
-function scriptFn (ws) { //
-  window.ws =ws
+function scriptFn (ws) {
+
   var bel = require('bel')
 
   var element = bel`<h1> hello world </h1>`

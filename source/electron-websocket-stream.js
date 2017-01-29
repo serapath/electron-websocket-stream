@@ -1,12 +1,9 @@
 var read = require('readable-stream/readable')
-var transform = require('readable-stream/transform')
-var passthrough = require('readable-stream/passthrough')
 var concat = require('concat-stream')
 var duplexify = require('duplexify')
 var websocket = require('websocket-stream')
 var browserify = require('browserify')
 var parsefn = require('parse-function')
-var isStream = require('is-stream')
 
 var https = require('https')
 var fs = require('fs')
@@ -18,7 +15,6 @@ var electron = require('electron')
 var app = electron.app
 var BrowserWindow = electron.BrowserWindow
 
-var electronProps = Object.keys(electron)
 var isReady = false
 var CRAWLERS = []
 var register = {
@@ -27,14 +23,12 @@ var register = {
 var SECRET = (''+Math.random()).substr(2)
 var WINDOWS = {}
 
-
 app.on('certificate-error', trustHandler)
 function trustHandler (event, webContents, url, error, certificate, trust) {
   event.preventDefault()
+  // Verification logic - do your validation here
   var decision
-  if (url === url) { // Verification logic.
-    decision = true // do your validation here
-  }
+  if (url === url) { decision = true }
   trust(decision)
 }
 var server = https.createServer({
@@ -150,20 +144,10 @@ process.on('exit', function () {
 
 module.exports = crawler
 
-function crawler (electronFn, options) {
-  var dup$ = duplexify(null,null,{ objectMode: true })
-  if (app.isReady() && server.listening) crawl()
+function crawler (options, callback) {
+  if (app.isReady() && server.listening) return crawl()
   register.on('ready', crawl)
-  function crawl () {
-    var stream$ = start(electronFn, options)
-    if (isStream.duplex(stream$)) {
-      var ptr = passthrough({ objectMode: true })
-      stream$.pipe(ptr)
-      dup$.setWritable(stream$)
-      dup$.setReadable(ptr)
-    }
-  }
-  return dup$
+  function crawl () { callback(null, start(options)) }
 }
 function websocketHandler (connection$) {
   var ID = connection$.socket.upgradeReq.url.split('-')[1]
@@ -194,16 +178,10 @@ function websocketHandler (connection$) {
     WINDOWS[ID] = null
   })
 }
-function start (electronFn, options) {
+function start (options) {
   function BrowserifyWindow (opts) { return BW(opts, options) }
-  var fnobj = parseValidFunction(electronFn)
-  var args = []
-  fnobj.args.forEach(function (param) {
-    if (param === 'BrowserifyWindow') return args.push(BrowserifyWindow)
-    var index = electronProps.indexOf(param)
-    if (index !== -1) args.push(electron[param])
-  })
-  return electronFn.apply(null, args)
+  electron.BrowserifyWindow = BrowserifyWindow
+  return electron
 }
 function handleError (err) {
   console.error(err) // print the error to STDERR
